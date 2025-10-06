@@ -5,6 +5,7 @@ const CortisMatch3Game = () => {
   const [level, setLevel] = useState(1);
   const [tiles, setTiles] = useState([]);
   const [slotBar, setSlotBar] = useState([]);
+  const [pendingTiles, setPendingTiles] = useState([]);
   const [gameState, setGameState] = useState('playing');
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [animatingTile, setAnimatingTile] = useState(null);
@@ -16,7 +17,24 @@ const CortisMatch3Game = () => {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareContext, setShareContext] = useState('game');
   const [isProcessingMatch, setIsProcessingMatch] = useState(false);
-  const [hasCompletedLevel1, setHasCompletedLevel1] = useState(false); // 'game' or 'fail'
+  const [hasCompletedLevel1, setHasCompletedLevel1] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  }); // 'game' or 'fail'
+
+  // Calculate tile scale factor based on screen width
+  const getScaleFactor = () => {
+    const screenWidth = windowSize.width;
+    if (screenWidth < 380) {
+      return screenWidth / 400;
+    }
+    return 1;
+  };
+
+  const scaleFactor = getScaleFactor();
+  const baseTileSize = 64;
+  const tileSize = baseTileSize * scaleFactor;
 
   // Audio elements - initialized once
   const backgroundMusic = React.useRef(null);
@@ -27,7 +45,7 @@ const CortisMatch3Game = () => {
   useEffect(() => {
     backgroundMusic.current = new Audio('/sounds/background-music.mp3');
     backgroundMusic.current.loop = true;
-    backgroundMusic.current.volume = 0.3;
+    backgroundMusic.current.volume = 0.15;
 
     clickSound.current = new Audio('/sounds/tile-click.mp3');
     clickSound.current.volume = 0.5;
@@ -40,7 +58,7 @@ const CortisMatch3Game = () => {
       if (backgroundMusic.current && !isMusicPlaying) {
         backgroundMusic.current.play()
           .then(() => setIsMusicPlaying(true))
-          .catch(e => console.log('Auto-play prevented:', e));
+          .catch(() => {});
       }
     };
 
@@ -59,18 +77,23 @@ const CortisMatch3Game = () => {
   const playSound = (soundRef) => {
     if (!isMusicPlaying || !soundRef.current) return; // Sound effects only play when music is on
     soundRef.current.currentTime = 0;
-    soundRef.current.play().catch(e => console.log('Audio play failed:', e));
+    soundRef.current.play().catch(() => {});
   };
 
   const toggleMusic = () => {
     if (!backgroundMusic.current) return;
-    
+
     if (isMusicPlaying) {
       backgroundMusic.current.pause();
       setIsMusicPlaying(false);
     } else {
-      backgroundMusic.current.play().catch(e => console.log('Music play failed:', e));
-      setIsMusicPlaying(true);
+      backgroundMusic.current.play()
+        .then(() => {
+          setIsMusicPlaying(true);
+        })
+        .catch(e => {
+          setIsMusicPlaying(false);
+        });
     }
   };
 
@@ -175,161 +198,145 @@ const CortisMatch3Game = () => {
       { x: 250, y: 170, layer: 1 }
     ],
     2: [
-      { x: 180, y: 30, layer: 0 },
-      { x: 230, y: 30, layer: 0 },
-      { x: 280, y: 30, layer: 0 },
-      { x: 330, y: 30, layer: 0 },
-      { x: 380, y: 30, layer: 0 },
-      { x: 430, y: 30, layer: 0 },
-      { x: 130, y: 80, layer: 0 },
-      { x: 180, y: 80, layer: 0 },
-      { x: 230, y: 80, layer: 0 },
-      { x: 280, y: 80, layer: 0 },
-      { x: 330, y: 80, layer: 0 },
-      { x: 380, y: 80, layer: 0 },
-      { x: 430, y: 80, layer: 0 },
-      { x: 480, y: 80, layer: 0 },
-      { x: 130, y: 130, layer: 0 },
-      { x: 180, y: 130, layer: 0 },
-      { x: 230, y: 130, layer: 0 },
-      { x: 280, y: 130, layer: 0 },
-      { x: 330, y: 130, layer: 0 },
-      { x: 380, y: 130, layer: 0 },
-      { x: 430, y: 130, layer: 0 },
-      { x: 480, y: 130, layer: 0 },
-      { x: 180, y: 180, layer: 0 },
-      { x: 230, y: 180, layer: 0 },
-      { x: 280, y: 180, layer: 0 },
-      { x: 330, y: 180, layer: 0 },
-      { x: 380, y: 180, layer: 0 },
-      { x: 430, y: 180, layer: 0 },
-      { x: 20, y: 400, layer: 0 },
-      { x: 26, y: 400, layer: 0 },
-      { x: 32, y: 400, layer: 0 },
-      { x: 38, y: 400, layer: 0 },
-      { x: 44, y: 400, layer: 0 },
-      { x: 50, y: 400, layer: 0 },
-      { x: 56, y: 400, layer: 0 },
-      { x: 62, y: 400, layer: 0 },
-      { x: 68, y: 400, layer: 0 },
-      { x: 74, y: 400, layer: 0 },
-      { x: 466, y: 400, layer: 0 },
-      { x: 472, y: 400, layer: 0 },
-      { x: 478, y: 400, layer: 0 },
-      { x: 484, y: 400, layer: 0 },
-      { x: 490, y: 400, layer: 0 },
-      { x: 496, y: 400, layer: 0 },
-      { x: 502, y: 400, layer: 0 },
-      { x: 508, y: 400, layer: 0 },
-      { x: 514, y: 400, layer: 0 },
-      { x: 520, y: 400, layer: 0 },
-      { x: 155, y: 55, layer: 1 },
-      { x: 205, y: 55, layer: 1 },
-      { x: 255, y: 55, layer: 1 },
-      { x: 305, y: 55, layer: 1 },
-      { x: 355, y: 55, layer: 1 },
-      { x: 405, y: 55, layer: 1 },
-      { x: 455, y: 55, layer: 1 },
-      { x: 155, y: 105, layer: 1 },
-      { x: 205, y: 105, layer: 1 },
-      { x: 255, y: 105, layer: 1 },
-      { x: 305, y: 105, layer: 1 },
-      { x: 355, y: 105, layer: 1 },
-      { x: 405, y: 105, layer: 1 },
-      { x: 455, y: 105, layer: 1 },
-      { x: 155, y: 155, layer: 1 },
-      { x: 205, y: 155, layer: 1 },
-      { x: 255, y: 155, layer: 1 },
-      { x: 305, y: 155, layer: 1 },
-      { x: 355, y: 155, layer: 1 },
-      { x: 405, y: 155, layer: 1 },
-      { x: 455, y: 155, layer: 1 },
-      { x: 205, y: 205, layer: 1 },
-      { x: 255, y: 205, layer: 1 },
-      { x: 305, y: 205, layer: 1 },
-      { x: 355, y: 205, layer: 1 },
-      { x: 405, y: 205, layer: 1 },
-      { x: 80, y: 400, layer: 1 },
-      { x: 86, y: 400, layer: 1 },
-      { x: 92, y: 400, layer: 1 },
-      { x: 526, y: 400, layer: 1 },
-      { x: 532, y: 400, layer: 1 },
-      { x: 538, y: 400, layer: 1 },
-      { x: 180, y: 80, layer: 2 },
-      { x: 230, y: 80, layer: 2 },
-      { x: 280, y: 80, layer: 2 },
-      { x: 330, y: 80, layer: 2 },
-      { x: 380, y: 80, layer: 2 },
-      { x: 430, y: 80, layer: 2 },
-      { x: 180, y: 130, layer: 2 },
-      { x: 230, y: 130, layer: 2 },
-      { x: 280, y: 130, layer: 2 },
-      { x: 330, y: 130, layer: 2 },
-      { x: 380, y: 130, layer: 2 },
-      { x: 430, y: 130, layer: 2 },
-      { x: 180, y: 180, layer: 2 },
-      { x: 230, y: 180, layer: 2 },
-      { x: 280, y: 180, layer: 2 },
-      { x: 330, y: 180, layer: 2 },
-      { x: 380, y: 180, layer: 2 },
-      { x: 430, y: 180, layer: 2 },
-      { x: 230, y: 230, layer: 2 },
-      { x: 280, y: 230, layer: 2 },
-      { x: 330, y: 230, layer: 2 },
-      { x: 380, y: 230, layer: 2 },
-      { x: 98, y: 400, layer: 2 },
-      { x: 104, y: 400, layer: 2 },
-      { x: 544, y: 400, layer: 2 },
-      { x: 550, y: 400, layer: 2 },
-      { x: 280, y: 280, layer: 2 },
-      { x: 330, y: 280, layer: 2 },
-      { x: 205, y: 105, layer: 3 },
-      { x: 255, y: 105, layer: 3 },
-      { x: 305, y: 105, layer: 3 },
-      { x: 355, y: 105, layer: 3 },
-      { x: 405, y: 105, layer: 3 },
-      { x: 205, y: 155, layer: 3 },
-      { x: 255, y: 155, layer: 3 },
-      { x: 305, y: 155, layer: 3 },
-      { x: 355, y: 155, layer: 3 },
-      { x: 405, y: 155, layer: 3 },
-      { x: 230, y: 205, layer: 3 },
-      { x: 280, y: 205, layer: 3 },
-      { x: 330, y: 205, layer: 3 },
-      { x: 380, y: 205, layer: 3 },
-      { x: 255, y: 255, layer: 3 },
-      { x: 305, y: 255, layer: 3 },
-      { x: 355, y: 255, layer: 3 },
-      { x: 110, y: 400, layer: 3 },
-      { x: 116, y: 400, layer: 3 },
-      { x: 556, y: 400, layer: 3 },
-      { x: 562, y: 400, layer: 3 },
-      { x: 230, y: 130, layer: 4 },
-      { x: 280, y: 130, layer: 4 },
-      { x: 330, y: 130, layer: 4 },
-      { x: 380, y: 130, layer: 4 },
-      { x: 230, y: 180, layer: 4 },
-      { x: 280, y: 180, layer: 4 },
-      { x: 330, y: 180, layer: 4 },
-      { x: 380, y: 180, layer: 4 },
-      { x: 255, y: 230, layer: 4 },
-      { x: 305, y: 230, layer: 4 },
-      { x: 355, y: 230, layer: 4 },
-      { x: 122, y: 400, layer: 4 },
-      { x: 255, y: 155, layer: 5 },
-      { x: 305, y: 155, layer: 5 },
-      { x: 355, y: 155, layer: 5 },
-      { x: 255, y: 205, layer: 5 },
-      { x: 305, y: 205, layer: 5 },
-      { x: 355, y: 205, layer: 5 },
-      { x: 280, y: 255, layer: 5 },
-      { x: 330, y: 255, layer: 5 },
-      { x: 128, y: 400, layer: 5 },
-      { x: 280, y: 180, layer: 6 },
-      { x: 305, y: 230, layer: 6 },
-      { x: 305, y: 280, layer: 6 },
-      { x: 280, y: 205, layer: 7 },
-      { x: 330, y: 205, layer: 7 }
+      // Top layer (accessible immediately)
+      { x: 140, y: 20, layer: 7 },
+      { x: 200, y: 20, layer: 7 },
+      
+      // Layer 6
+      { x: 100, y: 50, layer: 6 },
+      { x: 160, y: 50, layer: 6 },
+      { x: 220, y: 50, layer: 6 },
+      
+      // Layer 5  
+      { x: 80, y: 80, layer: 5 },
+      { x: 140, y: 80, layer: 5 },
+      { x: 200, y: 80, layer: 5 },
+      { x: 260, y: 80, layer: 5 },
+      
+      // Layer 4
+      { x: 60, y: 110, layer: 4 },
+      { x: 120, y: 110, layer: 4 },
+      { x: 180, y: 110, layer: 4 },
+      { x: 240, y: 110, layer: 4 },
+      { x: 300, y: 110, layer: 4 },
+      
+      // Layer 3
+      { x: 40, y: 140, layer: 3 },
+      { x: 100, y: 140, layer: 3 },
+      { x: 160, y: 140, layer: 3 },
+      { x: 220, y: 140, layer: 3 },
+      { x: 280, y: 140, layer: 3 },
+      
+      // Layer 2
+      { x: 20, y: 170, layer: 2 },
+      { x: 80, y: 170, layer: 2 },
+      { x: 140, y: 170, layer: 2 },
+      { x: 200, y: 170, layer: 2 },
+      { x: 260, y: 170, layer: 2 },
+      { x: 320, y: 170, layer: 2 },
+      
+      // Layer 1
+      { x: 60, y: 200, layer: 1 },
+      { x: 120, y: 200, layer: 1 },
+      { x: 180, y: 200, layer: 1 },
+      { x: 240, y: 200, layer: 1 },
+      
+      // Layer 0 - Main pile
+      { x: 100, y: 230, layer: 0 },
+      { x: 160, y: 230, layer: 0 },
+      { x: 220, y: 230, layer: 0 },
+      { x: 280, y: 230, layer: 0 },
+      
+      { x: 80, y: 260, layer: 0 },
+      { x: 140, y: 260, layer: 0 },
+      { x: 200, y: 260, layer: 0 },
+      { x: 260, y: 260, layer: 0 },
+      
+      { x: 60, y: 290, layer: 0 },
+      { x: 120, y: 290, layer: 0 },
+      { x: 180, y: 290, layer: 0 },
+      { x: 240, y: 290, layer: 0 },
+      { x: 300, y: 290, layer: 0 },
+      
+      { x: 100, y: 320, layer: 0 },
+      { x: 160, y: 320, layer: 0 },
+      { x: 220, y: 320, layer: 0 },
+      { x: 280, y: 320, layer: 0 },
+      
+      // Bottom left pile - 2 rows instead of 1
+      { x: 20, y: 360, layer: 0 },
+      { x: 30, y: 360, layer: 0 },
+      { x: 40, y: 360, layer: 0 },
+      { x: 50, y: 360, layer: 0 },
+      { x: 60, y: 360, layer: 0 },
+      
+      { x: 20, y: 380, layer: 0 },
+      { x: 30, y: 380, layer: 0 },
+      { x: 40, y: 380, layer: 0 },
+      { x: 50, y: 380, layer: 0 },
+      { x: 60, y: 380, layer: 0 },
+      
+      // Bottom right pile - 2 rows instead of 1
+      { x: 280, y: 360, layer: 0 },
+      { x: 290, y: 360, layer: 0 },
+      { x: 300, y: 360, layer: 0 },
+      { x: 310, y: 360, layer: 0 },
+      { x: 320, y: 360, layer: 0 },
+      
+      { x: 280, y: 380, layer: 0 },
+      { x: 290, y: 380, layer: 0 },
+      { x: 300, y: 380, layer: 0 },
+      { x: 310, y: 380, layer: 0 },
+      { x: 320, y: 380, layer: 0 },
+      
+      // Additional middle layers
+      { x: 120, y: 350, layer: 0 },
+      { x: 180, y: 350, layer: 0 },
+      { x: 240, y: 350, layer: 0 },
+      
+      { x: 140, y: 380, layer: 1 },
+      { x: 200, y: 380, layer: 1 },
+      
+      { x: 160, y: 400, layer: 2 },
+      { x: 180, y: 420, layer: 3 },
+      
+      // Fill remaining tiles
+      { x: 100, y: 200, layer: 0 },
+      { x: 220, y: 200, layer: 0 },
+      { x: 140, y: 170, layer: 1 },
+      { x: 200, y: 170, layer: 1 },
+      { x: 120, y: 140, layer: 2 },
+      { x: 180, y: 140, layer: 2 },
+      { x: 240, y: 140, layer: 2 },
+      { x: 100, y: 110, layer: 3 },
+      { x: 160, y: 110, layer: 3 },
+      { x: 220, y: 110, layer: 3 },
+      { x: 280, y: 110, layer: 3 },
+      { x: 120, y: 80, layer: 4 },
+      { x: 180, y: 80, layer: 4 },
+      { x: 240, y: 80, layer: 4 },
+      { x: 140, y: 50, layer: 5 },
+      { x: 200, y: 50, layer: 5 },
+      { x: 170, y: 20, layer: 6 },
+      
+      // Additional fills to reach 150
+      { x: 80, y: 230, layer: 0 },
+      { x: 240, y: 230, layer: 0 },
+      { x: 120, y: 260, layer: 0 },
+      { x: 220, y: 260, layer: 0 },
+      { x: 100, y: 290, layer: 0 },
+      { x: 200, y: 290, layer: 0 },
+      { x: 260, y: 290, layer: 0 },
+      { x: 140, y: 320, layer: 0 },
+      { x: 200, y: 320, layer: 0 },
+      { x: 260, y: 320, layer: 0 },
+      { x: 160, y: 350, layer: 0 },
+      { x: 220, y: 350, layer: 0 },
+      { x: 120, y: 380, layer: 0 },
+      { x: 220, y: 380, layer: 0 },
+      { x: 140, y: 410, layer: 0 },
+      { x: 200, y: 410, layer: 0 },
+      { x: 160, y: 440, layer: 0 }
     ]
   };
 
@@ -421,17 +428,26 @@ const CortisMatch3Game = () => {
     startNewGame();
     
     const handleResize = () => {
-      setTiles([...tiles]);
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
     };
     
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
   }, [level]);
 
   const startNewGame = () => {
     const newTiles = generateTiles(level);
     setTiles(newTiles);
     setSlotBar([]);
+    setPendingTiles([]);
     setGameState('playing');
     setAnimatingTile(null);
     setMatchingTiles([]);
@@ -441,27 +457,51 @@ const CortisMatch3Game = () => {
   };
 
   const isTileCovered = (tile, allTiles) => {
-    const tileSize = 64;
-    
-    return allTiles.some(other => {
-      if (other.id === tile.id) return false;
-      if (other.layer <= tile.layer) return false;
-      
+    // Use base tile size for calculations since positions are in base coordinates
+    const baseTileSizeLocal = 64;
+    const tileArea = baseTileSizeLocal * baseTileSizeLocal;
+
+    // Calculate total covered area by all overlapping tiles (any layer above OR same layer with higher zIndex)
+    let totalCoveredArea = 0;
+
+    allTiles.forEach(other => {
+      if (other.id === tile.id) return;
+
+      // Skip if other tile is below this tile (lower layer, or same layer but lower zIndex)
+      if (other.layer < tile.layer) return;
+      if (other.layer === tile.layer && other.zIndex <= tile.zIndex) return;
+
       const tile1Left = tile.x;
-      const tile1Right = tile.x + tileSize;
+      const tile1Right = tile.x + baseTileSizeLocal;
       const tile1Top = tile.y;
-      const tile1Bottom = tile.y + tileSize;
-      
+      const tile1Bottom = tile.y + baseTileSizeLocal;
+
       const tile2Left = other.x;
-      const tile2Right = other.x + tileSize;
+      const tile2Right = other.x + baseTileSizeLocal;
       const tile2Top = other.y;
-      const tile2Bottom = other.y + tileSize;
-      
+      const tile2Bottom = other.y + baseTileSizeLocal;
+
       const overlapsHorizontally = tile1Right > tile2Left && tile1Left < tile2Right;
       const overlapsVertically = tile1Bottom > tile2Top && tile1Top < tile2Bottom;
-      
-      return overlapsHorizontally && overlapsVertically;
+
+      if (overlapsHorizontally && overlapsVertically) {
+        // Calculate the overlapping area
+        const overlapLeft = Math.max(tile1Left, tile2Left);
+        const overlapRight = Math.min(tile1Right, tile2Right);
+        const overlapTop = Math.max(tile1Top, tile2Top);
+        const overlapBottom = Math.min(tile1Bottom, tile2Bottom);
+
+        const overlapWidth = overlapRight - overlapLeft;
+        const overlapHeight = overlapBottom - overlapTop;
+        const overlapArea = overlapWidth * overlapHeight;
+
+        totalCoveredArea += overlapArea;
+      }
     });
+
+    // Tile is considered covered if more than 50% of its area is covered
+    const coveredPercentage = totalCoveredArea / tileArea;
+    return coveredPercentage > 0.5;
   };
 
   const sortSlotBar = (bar) => {
@@ -489,68 +529,75 @@ const CortisMatch3Game = () => {
     if (gameState !== 'playing') return;
     if (isTileCovered(tile, tiles)) return;
 
+    // Prevent clicking tiles that are already pending
+    if (pendingTiles.some(t => t.id === tile.id)) return;
+
     // Play click sound
     playSound(clickSound);
 
-    setSlotBar(currentSlotBar => {
-      if (currentSlotBar.length >= 7) {
-        return currentSlotBar;
-      }
-      return currentSlotBar;
-    });
-
+    // Immediately add to pendingTiles to prevent re-clicks
+    setPendingTiles(current => [...current, tile]);
     setAnimatingTile(tile.id);
 
     setTimeout(() => {
       setTiles(currentTiles => currentTiles.filter(t => t.id !== tile.id));
-      
+
+      // Move from pendingTiles to slotBar
+      setPendingTiles(current => current.filter(t => t.id !== tile.id));
+
       setSlotBar(currentSlotBar => {
-        if (currentSlotBar.length >= maxSlots) return currentSlotBar;
-        
         const newSlotBar = sortSlotBar([...currentSlotBar, tile]);
         const matches = findMatches(newSlotBar);
-        
+
         if (matches.length > 0) {
           const matchingTilesList = newSlotBar.filter(t => matches.includes(t.type));
           setMatchingTiles(matchingTilesList.map(t => t.id));
-          
+
           // Play explosion sound after short delay
           setTimeout(() => {
             playSound(explodeSound);
           }, 250);
-          
+
           setTimeout(() => {
             setSlotBar(currentBar => {
               const updatedSlotBar = currentBar.filter(t => !matches.includes(t.type));
-              
-              setTiles(currentTiles => {
-                if (currentTiles.length === 0 && updatedSlotBar.length === 0) {
-                  setGameState('won');
-                  if (level === 1) {
-                    setHasCompletedLevel1(true);
+
+              // Check win condition: no tiles on board, no tiles in slot bar, no pending tiles
+              setPendingTiles(currentPending => {
+                setTiles(currentTiles => {
+                  if (currentTiles.length === 0 && updatedSlotBar.length === 0 && currentPending.length === 0) {
+                    setGameState('won');
+                    if (level === 1) {
+                      setHasCompletedLevel1(true);
+                    }
                   }
-                }
-                return currentTiles;
+                  return currentTiles;
+                });
+                return currentPending;
               });
-              
+
               return updatedSlotBar;
             });
             setMatchingTiles([]);
           }, 700);
         } else {
-          if (newSlotBar.length >= maxSlots) {
-            const hasNoMatches = findMatches(newSlotBar).length === 0;
-            if (hasNoMatches) {
-              setTimeout(() => {
-                setGameState('lost');
-              }, 100);
+          // Check game over condition: slotBar + pendingTiles exceeds maxSlots
+          setPendingTiles(currentPending => {
+            if (newSlotBar.length + currentPending.length >= maxSlots) {
+              const hasNoMatches = findMatches(newSlotBar).length === 0;
+              if (hasNoMatches) {
+                setTimeout(() => {
+                  setGameState('lost');
+                }, 100);
+              }
             }
-          }
+            return currentPending;
+          });
         }
-        
+
         return newSlotBar;
       });
-      
+
       setAnimatingTile(null);
     }, 200);
   };
@@ -578,11 +625,6 @@ const CortisMatch3Game = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-pink-50 to-purple-100 flex items-center justify-center overflow-hidden">
       <style>{`
-        @keyframes slideToSlot {
-          0% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(0.85); opacity: 0.9; }
-          100% { transform: scale(1); opacity: 1; }
-        }
         @keyframes popIn {
           0% { transform: scale(0.5); opacity: 0; }
           50% { transform: scale(1.1); }
@@ -645,10 +687,11 @@ const CortisMatch3Game = () => {
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-3 sm:mb-4 relative overflow-hidden touch-none flex items-center justify-center" 
-             style={{ 
-               height: level === 1 ? 'min(400px, 60vh)' : 'min(540px, 70vh)',
-               maxWidth: '100%'
+        <div className="bg-white rounded-lg shadow-lg mb-3 sm:mb-4 relative touch-none"
+             style={{
+               height: level === 1 ? 'min(400px, 60vh)' : 'min(600px, 75vh)',
+               maxWidth: '100%',
+               overflow: 'hidden'
              }}>
           {gameState === 'won' && (
             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg z-[10000]">
@@ -789,46 +832,38 @@ const CortisMatch3Game = () => {
           )}
 
           <div className="relative w-full h-full flex items-center justify-center">
-            <div 
+            <div
               className="relative"
               style={{
-                width: level === 1 ? '350px' : '600px',
-                height: level === 1 ? '350px' : '500px',
-                transform: level === 1 
-                  ? `scale(${Math.min(1, (window.innerWidth - 32) / 350, (window.innerHeight * 0.6 - 64) / 350)})` 
-                  : `scale(${Math.min(0.9, (window.innerWidth - 32) / 600, (window.innerHeight * 0.7 - 64) / 500)})`,
-                transformOrigin: level === 1 
-                  ? 'center center' 
-                  : window.innerWidth < 640 
-                    ? '40% center'
-                    : 'center center'
+                width: level === 1 ? `${350 * scaleFactor}px` : `${380 * scaleFactor}px`,
+                height: level === 1 ? `${350 * scaleFactor}px` : `${480 * scaleFactor}px`
               }}
             >
             {tiles.map(tile => {
               const isAvailable = availableTiles.some(t => t.id === tile.id);
-              const isAnimating = animatingTile === tile.id;
               const imageUrl = imageFiles[tile.type];
-              
+
               return (
                 <button
                   key={tile.id}
                   onClick={() => handleTileClick(tile)}
                   disabled={!isAvailable || gameState !== 'playing'}
                   style={{
-                    left: `${tile.x}px`,
-                    top: `${tile.y}px`,
+                    left: `${tile.x * scaleFactor}px`,
+                    top: `${tile.y * scaleFactor}px`,
+                    width: `${tileSize}px`,
+                    height: `${tileSize}px`,
                     zIndex: isAvailable ? tile.zIndex + 1000 : tile.zIndex,
                     boxShadow: '0 4px 6px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.1)',
                     backgroundImage: `url('${imageUrl}')`,
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    animation: isAnimating ? 'slideToSlot 0.2s ease-out' : 'none'
+                    backgroundPosition: 'center'
                   }}
                   className={`
-                    absolute w-16 h-16 rounded-lg flex items-center justify-center
+                    absolute rounded-lg flex items-center justify-center
                     font-bold overflow-hidden
                     bg-gradient-to-br from-blue-200 to-pink-200 shadow-lg
-                    transition-all duration-200
+                    transition-transform duration-100
                     ${isAvailable 
                       ? 'hover:scale-110 active:scale-95 cursor-pointer border-4 border-white' 
                       : 'cursor-not-allowed border-2 border-gray-400'}
