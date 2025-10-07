@@ -104,11 +104,19 @@ const CortisMatch3Game = () => {
   };
 
   const shareUrl = 'https://cortis-match.vercel.app';
-  const shareText = "I can't beat Cortis Match Level 2! 😤 Can you?";
+
+  const getShareText = () => {
+    if (shareContext === 'victory') {
+      return "I just beat Cortis Match Level 2! 🏆 Only 2% can do this. Think you can? 💪";
+    }
+    return "I can't beat Cortis Match Level 2! 😤 Can you?";
+  };
 
   const handleShare = async (platform) => {
     // Track share click
     analytics.shareClick(platform, shareContext);
+
+    const shareText = getShareText();
 
     if (platform === 'native') {
       // Web Share API (mobile)
@@ -343,9 +351,7 @@ const CortisMatch3Game = () => {
       { x: 220, y: 350, layer: 0 },
       { x: 120, y: 380, layer: 0 },
       { x: 220, y: 380, layer: 0 },
-      { x: 140, y: 410, layer: 0 },
-      { x: 200, y: 410, layer: 0 },
-      { x: 160, y: 440, layer: 0 }
+      { x: 160, y: 410, layer: 0 }
     ]
   };
 
@@ -510,9 +516,12 @@ const CortisMatch3Game = () => {
       }
     });
 
-    // Tile is considered covered if more than 50% of its area is covered
+    // Tile is considered covered based on level difficulty
+    // Level 1: 50% covered = not selectable (easier)
+    // Level 2: 10% covered = not selectable (harder - must be 90% visible)
     const coveredPercentage = totalCoveredArea / tileArea;
-    return coveredPercentage > 0.5;
+    const threshold = level === 2 ? 0.1 : 0.5;
+    return coveredPercentage > threshold;
   };
 
   const sortSlotBar = (bar) => {
@@ -561,8 +570,13 @@ const CortisMatch3Game = () => {
         const matches = findMatches(newSlotBar);
 
         if (matches.length > 0) {
-          const matchingTilesList = newSlotBar.filter(t => matches.includes(t.type));
-          setMatchingTiles(matchingTilesList.map(t => t.id));
+          // Only mark the first 3 tiles of each matching type for animation
+          const tilesToAnimate = [];
+          matches.forEach(matchType => {
+            const tilesOfType = newSlotBar.filter(t => t.type === matchType);
+            tilesToAnimate.push(...tilesOfType.slice(0, 3).map(t => t.id));
+          });
+          setMatchingTiles(tilesToAnimate);
 
           // Play explosion sound after short delay
           setTimeout(() => {
@@ -571,7 +585,21 @@ const CortisMatch3Game = () => {
 
           setTimeout(() => {
             setSlotBar(currentBar => {
-              const updatedSlotBar = currentBar.filter(t => !matches.includes(t.type));
+              // Recalculate matches based on current bar state
+              const currentMatches = findMatches(currentBar);
+
+              // Remove exactly 3 tiles of each matching type
+              let updatedSlotBar = [...currentBar];
+              currentMatches.forEach(matchType => {
+                let removed = 0;
+                updatedSlotBar = updatedSlotBar.filter(t => {
+                  if (t.type === matchType && removed < 3) {
+                    removed++;
+                    return false;
+                  }
+                  return true;
+                });
+              });
 
               // Check win condition: no tiles on board, no tiles in slot bar, no pending tiles
               setPendingTiles(currentPending => {
@@ -706,7 +734,7 @@ const CortisMatch3Game = () => {
                maxWidth: '100%',
                overflow: 'hidden'
              }}>
-          {gameState === 'won' && (
+          {gameState === 'won' && level === 1 && (
             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg z-[10000]">
               <div className="bg-gradient-to-r from-green-400 to-blue-400 rounded-lg shadow-xl p-4 sm:p-6 text-center text-white max-w-sm mx-4">
                 <Trophy className="mx-auto mb-3" size={48} />
@@ -720,6 +748,34 @@ const CortisMatch3Game = () => {
                   className="bg-white text-purple-600 px-4 sm:px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition text-sm sm:text-base"
                 >
                   Next Level →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {gameState === 'won' && level === 2 && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg z-[10000]">
+              <div className="bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-500 rounded-lg shadow-xl p-4 sm:p-6 text-center text-white max-w-sm mx-4">
+                <Trophy className="mx-auto mb-3" size={64} />
+                <h2 className="text-2xl sm:text-3xl font-bold mb-2">🏆 Victory! 🏆</h2>
+                <p className="mb-3 text-base sm:text-lg font-semibold">You beat the IMPOSSIBLE level!</p>
+                <p className="mb-4 text-sm sm:text-base opacity-90">Only 2% of players can do this 💪</p>
+
+                <button
+                  onClick={() => openShareDialog('victory')}
+                  className="w-full bg-white text-purple-600 px-4 sm:px-6 py-3 rounded-full font-bold hover:bg-gray-100 transition text-sm sm:text-base mb-3 shadow-lg"
+                >
+                  🎉 Share Your Victory!
+                </button>
+
+                <button
+                  onClick={() => {
+                    setGameState('playing');
+                    restartGame();
+                  }}
+                  className="w-full bg-transparent border-2 border-white text-white px-4 sm:px-6 py-2 rounded-full font-bold hover:bg-white hover:text-purple-600 transition text-sm sm:text-base"
+                >
+                  Play Again
                 </button>
               </div>
             </div>
