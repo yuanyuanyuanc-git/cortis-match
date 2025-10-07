@@ -728,11 +728,12 @@ const CortisMatch3Game = () => {
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg mb-3 sm:mb-4 relative touch-none"
+        <div className="bg-white rounded-lg shadow-lg mb-3 sm:mb-4 relative"
              style={{
                height: level === 1 ? 'min(400px, 60vh)' : 'min(600px, 75vh)',
                maxWidth: '100%',
-               overflow: 'hidden'
+               overflow: 'hidden',
+               touchAction: 'pan-y' // Allow vertical scrolling but prevent horizontal pan
              }}>
           {gameState === 'won' && level === 1 && (
             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg z-[10000]">
