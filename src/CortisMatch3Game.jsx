@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, RotateCcw, Trophy } from 'lucide-react';
+import { analytics } from './analytics';
 
 const CortisMatch3Game = () => {
   const [level, setLevel] = useState(1);
@@ -43,6 +44,9 @@ const CortisMatch3Game = () => {
 
   // Initialize audio on component mount
   useEffect(() => {
+    // Track page view
+    analytics.pageView();
+
     backgroundMusic.current = new Audio('/sounds/background-music.mp3');
     backgroundMusic.current.loop = true;
     backgroundMusic.current.volume = 0.15;
@@ -86,10 +90,12 @@ const CortisMatch3Game = () => {
     if (isMusicPlaying) {
       backgroundMusic.current.pause();
       setIsMusicPlaying(false);
+      analytics.musicToggle(false);
     } else {
       backgroundMusic.current.play()
         .then(() => {
           setIsMusicPlaying(true);
+          analytics.musicToggle(true);
         })
         .catch(e => {
           setIsMusicPlaying(false);
@@ -101,6 +107,9 @@ const CortisMatch3Game = () => {
   const shareText = "I can't beat Cortis Match Level 2! 😤 Can you?";
 
   const handleShare = async (platform) => {
+    // Track share click
+    analytics.shareClick(platform, shareContext);
+
     if (platform === 'native') {
       // Web Share API (mobile)
       if (navigator.share) {
@@ -134,7 +143,7 @@ const CortisMatch3Game = () => {
         reddit: `https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareText)}`,
         linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`
       };
-      
+
       window.open(urls[platform], '_blank', 'width=600,height=400');
       // Grant reward immediately when share window opens
       onShareSuccess();
@@ -426,17 +435,19 @@ const CortisMatch3Game = () => {
 
   useEffect(() => {
     startNewGame();
-    
+    // Track level start
+    analytics.levelStart(level);
+
     const handleResize = () => {
       setWindowSize({
         width: window.innerWidth,
         height: window.innerHeight
       });
     };
-    
+
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleResize);
-    
+
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
@@ -567,6 +578,7 @@ const CortisMatch3Game = () => {
                 setTiles(currentTiles => {
                   if (currentTiles.length === 0 && updatedSlotBar.length === 0 && currentPending.length === 0) {
                     setGameState('won');
+                    analytics.levelComplete(level);
                     if (level === 1) {
                       setHasCompletedLevel1(true);
                     }
@@ -588,6 +600,7 @@ const CortisMatch3Game = () => {
               if (hasNoMatches) {
                 setTimeout(() => {
                   setGameState('lost');
+                  analytics.levelFail(level);
                 }, 100);
               }
             }
