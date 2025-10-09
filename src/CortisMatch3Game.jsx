@@ -545,7 +545,7 @@ const CortisMatch3Game = () => {
     return bar;
   };
 
-  const handleTileClick = (tile) => {
+   const handleTileClick = (tile) => {
     if (gameState !== 'playing') return;
     if (isTileCovered(tile, tiles)) return;
 
@@ -570,6 +570,9 @@ const CortisMatch3Game = () => {
         const matches = findMatches(newSlotBar);
 
         if (matches.length > 0) {
+          // Set processing flag to prevent premature game over checks
+          setIsProcessingMatch(true);
+          
           // Only mark the first 3 tiles of each matching type for animation
           const tilesToAnimate = [];
           matches.forEach(matchType => {
@@ -616,14 +619,19 @@ const CortisMatch3Game = () => {
                 return currentPending;
               });
 
+              // Clear processing flag after match is complete
+              setIsProcessingMatch(false);
+
               return updatedSlotBar;
             });
             setMatchingTiles([]);
           }, 700);
         } else {
           // Check game over condition: slotBar + pendingTiles exceeds maxSlots
+          // BUT ONLY if we're not currently processing a match
           setPendingTiles(currentPending => {
-            if (newSlotBar.length + currentPending.length >= maxSlots) {
+            // Don't check game over if a match is being processed
+            if (!isProcessingMatch && newSlotBar.length + currentPending.length >= maxSlots) {
               const hasNoMatches = findMatches(newSlotBar).length === 0;
               if (hasNoMatches) {
                 setTimeout(() => {
