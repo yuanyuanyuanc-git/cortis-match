@@ -627,11 +627,11 @@ const CortisMatch3Game = () => {
             setMatchingTiles([]);
           }, 700);
         } else {
-          // Check game over condition: slotBar + pendingTiles exceeds maxSlots
-          // BUT ONLY if we're not currently processing a match
+          // Check game over condition: slot bar is full
           setPendingTiles(currentPending => {
-            // Don't check game over if a match is being processed
-            if (!isProcessingMatch && newSlotBar.length + currentPending.length >= maxSlots) {
+            // Only check game over if all tiles have landed (no pending tiles)
+            // This prevents premature game over when rapidly clicking matching tiles
+            if (currentPending.length === 0 && newSlotBar.length >= maxSlots) {
               const hasNoMatches = findMatches(newSlotBar).length === 0;
               if (hasNoMatches) {
                 setTimeout(() => {
